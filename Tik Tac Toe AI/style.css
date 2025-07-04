@@ -1,0 +1,86 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
+
+body {
+  font-family: 'Fredoka One', cursive;
+  text-align: center;
+  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+  color: #333;
+  margin: 0;
+  padding: 20px;
+}
+
+h1 {
+  color: #ff4e50;
+  font-size: 3em;
+  text-shadow: 2px 2px #ffd700;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, 100px);
+  gap: 10px;
+  justify-content: center;
+  margin: 30px auto;
+}
+
+.cell {
+  width: 100px;
+  height: 100px;
+  font-size: 48px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border: 4px solid #ff69b4;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.3s;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.cell:hover:not(.disabled) {
+  background: #ffe0f0;
+  transform: scale(1.1);
+}
+
+.cell.disabled {
+  cursor: default;
+  color: #999;
+  pointer-events: none;
+}
+
+#status {
+  font-size: 24px;
+  margin-top: 20px;
+  color: #3333cc;
+  text-shadow: 1px 1px #fff;
+}
+
+button {
+  background-color: #33c3f0;
+  color: white;
+  border: none;
+  padding: 14px 28px;
+  font-size: 18px;
+  font-family: 'Fredoka One', cursive;
+  border-radius: 10px;
+  margin-top: 20px;
+  cursor: pointer;
+  transition: background 0.3s;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+button:hover {
+  background-color: #28a6e0;
+}
+
+/* Animation on move */
+@keyframes bounceIn {
+  0% { transform: scale(0.5); opacity: 0.3; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.cell {
+  animation: bounceIn 0.3s ease;
+}
