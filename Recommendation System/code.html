@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Recommendation System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-purple-700">Book Recommendation System</h1>
+            <p class="text-gray-600">Get personalized book suggestions</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- User Input Section -->
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h2 class="text-xl font-semibold mb-4">Your Preferences</h2>
+                
+                <div class="mb-6">
+                    <h3 class="font-medium mb-2">Select genres you enjoy:</h3>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="genre-btn px-3 py-1 bg-gray-200 rounded-full hover:bg-purple-200" data-genre="Fantasy">Fantasy</button>
+                        <button class="genre-btn px-3 py-1 bg-gray-200 rounded-full hover:bg-purple-200" data-genre="Sci-Fi">Sci-Fi</button>
+                        <button class="genre-btn px-3 py-1 bg-gray-200 rounded-full hover:bg-purple-200" data-genre="Mystery">Mystery</button>
+                        <button class="genre-btn px-3 py-1 bg-gray-200 rounded-full hover:bg-purple-200" data-genre="Romance">Romance</button>
+                        <button class="genre-btn px-3 py-1 bg-gray-200 rounded-full hover:bg-purple-200" data-genre="Thriller">Thriller</button>
+                        <button class="genre-btn px-3 py-1 bg-gray-200 rounded-full hover:bg-purple-200" data-genre="Biography">Biography</button>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="font-medium mb-2">Books you've enjoyed:</h3>
+                    <input type="text" id="book-search" placeholder="Search books..." class="w-full p-2 border rounded mb-2">
+                    <div id="book-results" class="max-h-40 overflow-y-auto border rounded hidden"></div>
+                    <div id="selected-books" class="mt-2 flex flex-wrap gap-2"></div>
+                </div>
+
+                <button id="recommend-btn" class="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 transition">
+                    Get Recommendations
+                </button>
+            </div>
+
+            <!-- Recommendations Section -->
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h2 class="text-xl font-semibold mb-4">Recommended For You</h2>
+                <div id="recommendations">
+                    <p class="text-gray-500 text-center py-8">Select your preferences to get recommendations</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample book data
+        const books = [
+            { id: 1, title: "The Hobbit", author: "J.R.R. Tolkien", genres: ["Fantasy", "Adventure"], rating: 4.5 },
+            { id: 2, title: "Dune", author: "Frank Herbert", genres: ["Sci-Fi", "Fantasy"], rating: 4.7 },
+            { id: 3, title: "Gone Girl", author: "Gillian Flynn", genres: ["Thriller", "Mystery"], rating: 4.2 },
+            { id: 4, title: "The Silent Patient", author: "Alex Michaelides", genres: ["Thriller", "Psychological"], rating: 4.3 },
+            { id: 5, title: "Project Hail Mary", author: "Andy Weir", genres: ["Sci-Fi", "Adventure"], rating: 4.8 },
+            { id: 6, title: "Normal People", author: "Sally Rooney", genres: ["Romance", "Fiction"], rating: 4.0 },
+            { id: 7, title: "The Night Circus", author: "Erin Morgenstern", genres: ["Fantasy", "Romance"], rating: 4.4 },
+            { id: 8, title: "Educated", author: "Tara Westover", genres: ["Biography", "Memoir"], rating: 4.7 },
+            { id: 9, title: "The Song of Achilles", author: "Madeline Miller", genres: ["Romance", "Historical"], rating: 4.5 },
+            { id: 10, title: "The Martian", author: "Andy Weir", genres: ["Sci-Fi", "Adventure"], rating: 4.6 }
+        ];
+
+        // User preferences
+        let selectedGenres = [];
+        let selectedBooks = [];
+
+        // Event listeners for genre selection
+        document.querySelectorAll('.genre-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const genre = this.dataset.genre;
+                if (this.classList.contains('bg-purple-600')) {
+                    // Deselect
+                    this.classList.remove('bg-purple-600', 'text-white');
+                    this.classList.add('bg-gray-200');
+                    selectedGenres = selectedGenres.filter(g => g !== genre);
+                } else {
+                    // Select
+                    this.classList.remove('bg-gray-200');
+                    this.classList.add('bg-purple-600', 'text-white');
+                    selectedGenres.push(genre);
+                }
+            });
+        });
+
+        // Book search functionality
+        document.getElementById('book-search').addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const resultsDiv = document.getElementById('book-results');
+            
+            if (searchTerm.length < 2) {
+                resultsDiv.classList.add('hidden');
+                return;
+            }
+
+            const filtered = books.filter(book => 
+                book.title.toLowerCase().includes(searchTerm) || 
+                book.author.toLowerCase().includes(searchTerm)
+            );
+
+            showBookResults(filtered);
+        });
+
+        function showBookResults(bookList) {
+            const resultsDiv = document.getElementById('book-results');
+            resultsDiv.innerHTML = '';
+            
+            if (bookList.length === 0) {
+                resultsDiv.innerHTML = '<p class="p-2 text-gray-500">No books found</p>';
+                resultsDiv.classList.remove('hidden');
+                return;
+            }
+
+            bookList.forEach(book => {
+                if (selectedBooks.some(b => b.id === book.id)) return;
+                
+                const div = document.createElement('div');
+                div.className = 'p-2 hover:bg-purple-50 cursor-pointer border-b';
+                div.textContent = `${book.title} by ${book.author}`;
+                div.addEventListener('click', () => {
+                    selectBook(book);
+                    document.getElementById('book-results').classList.add('hidden');
+                    document.getElementById('book-search').value = '';
+                });
+                resultsDiv.appendChild(div);
+            });
+
+            resultsDiv.classList.remove('hidden');
+        }
+
+        function selectBook(book) {
+            if (selectedBooks.some(b => b.id === book.id)) return;
+            
+            selectedBooks.push(book);
+            renderSelectedBooks();
+        }
+
+        function renderSelectedBooks() {
+            const container = document.getElementById('selected-books');
+            container.innerHTML = '';
+            
+            selectedBooks.forEach(book => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center bg-purple-100 rounded-full px-3 py-1';
+                div.innerHTML = `
+                    <span>${book.title}</span>
+                    <button class="ml-2 text-purple-700" onclick="removeSelectedBook(${book.id})">×</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Handle removal of selected books
+        window.removeSelectedBook = function(bookId) {
+            selectedBooks = selectedBooks.filter(book => book.id !== bookId);
+            renderSelectedBooks();
+        };
+
+        // Recommendation system implementation (Content-Based Filtering)
+        document.getElementById('recommend-btn').addEventListener('click', function() {
+            const recommendations = getRecommendations();
+            displayRecommendations(recommendations);
+        });
+
+        function getRecommendations() {
+            // If no preferences selected, return random books
+            if (selectedGenres.length === 0 && selectedBooks.length === 0) {
+                return [...books].sort(() => 0.5 - Math.random()).slice(0, 3);
+            }
+
+            // Score books based on genre matching and user's selected books
+            const scoredBooks = books.map(book => {
+                let score = 0;
+                
+                // Don't recommend already selected books
+                if (selectedBooks.some(b => b.id === book.id)) {
+                    return { ...book, score: -1 };
+                }
+
+                // Score based on genre matches
+                book.genres.forEach(genre => {
+                    if (selectedGenres.includes(genre)) {
+                        score += 2; // Higher weight for explicit genre selection
+                    }
+                });
+
+                // Additional score if book shares genres with selected books
+                selectedBooks.forEach(selectedBook => {
+                    selectedBook.genres.forEach(genre => {
+                        if (book.genres.includes(genre)) {
+                            score += 1; // Lower weight for inferred preference
+                        }
+                    });
+                });
+
+                return { ...book, score };
+            });
+
+            // Filter out books with negative score and sort by score
+            return scoredBooks
+                .filter(book => book.score > 0)
+                .sort((a, b) => b.score - b.score)
+                .slice(0, 5);
+        }
+
+        function displayRecommendations(recommendations) {
+            const container = document.getElementById('recommendations');
+            container.innerHTML = '';
+            
+            if (recommendations.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">No recommendations found. Try selecting different preferences.</p>';
+                return;
+            }
+
+            recommendations.forEach((book, index) => {
+                const div = document.createElement('div');
+                div.className = 'mb-4 p-3 border rounded fade-in';
+                div.style.animationDelay = `${index * 0.1}s`;
+                div.innerHTML = `
+                    <h3 class="font-bold text-lg">${book.title}</h3>
+                    <p class="text-purple-600 mb-1">${book.author}</p>
+                    <div class="flex gap-1 mb-2">
+                        ${book.genres.map(g => `<span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">${g}</span>`).join('')}
+                    </div>
+                    <div class="flex items-center">
+                        <span class="text-yellow-500 mr-1">${'★'.repeat(Math.floor(book.rating))}${'☆'.repeat(5 - Math.floor(book.rating))}</span>
+                        <span class="text-gray-500 text-sm">(${book.rating.toFixed(1)})</span>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+    </script>
+</body>
+</html>
